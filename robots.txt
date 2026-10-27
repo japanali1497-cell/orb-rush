@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://japanali1497-cell.github.io/orb-rush/sitemap.xml
