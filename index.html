@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Orb Rush - Free Online Dodge Game | Play Now</title>
+<meta name="description" content="Orb Rush is a free, fast one-more-try dodge game. Dodge the blocks, grab coins, beat your high score and the daily challenge. Play instantly on phone or PC.">
+<meta name="keywords" content="free online game, dodge game, browser game, arcade game, mobile game, endless game, one more try game, daily challenge">
+<meta name="theme-color" content="#0b0b1e">
+<meta property="og:title" content="Orb Rush - Free Online Dodge Game">
+<meta property="og:description" content="Dodge, collect, beat your high score. Play instantly, no download.">
+<meta property="og:type" content="website">
+<link rel="manifest" href="manifest.json">
+<style>
+html,body{margin:0;height:100%;background:#0b0b1e;color:#fff;font-family:system-ui,Arial,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#wrap{position:fixed;inset:0;display:flex;flex-direction:column}
+/* ===== AD SLOT 1: BANNER. Replace the inner text with your ad code (e.g. AdSense) ===== */
+#ad-banner{height:50px;flex:none;display:flex;align-items:center;justify-content:center;background:#10102a;color:#556;font-size:11px}
+#stage{flex:1;position:relative;min-height:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;pointer-events:none;font-weight:800;font-size:22px}
+#hud small{display:block;font-size:12px;opacity:.6;font-weight:600}
+#hud button{pointer-events:auto;font-size:20px;padding:6px 10px;margin-left:6px}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(5,5,20,.82);text-align:center;padding:16px;box-sizing:border-box}
+.hide{display:none!important}
+h1{font-size:clamp(40px,10vw,72px);margin:0;letter-spacing:4px;background:linear-gradient(90deg,#5ef,#f6a);-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{margin:0;font-size:36px}
+p{margin:0;opacity:.8}
+button{font:700 18px system-ui,Arial,sans-serif;padding:12px 26px;border:0;border-radius:14px;background:linear-gradient(#5ef,#39d);color:#012;cursor:pointer;min-width:200px}
+button:active{transform:scale(.96)}
+button.alt{background:#2a2a55;color:#fff}
+#hud button{min-width:0;background:#2a2a55cc;color:#fff}
+#skins{display:flex;gap:10px}
+.sk{width:46px;height:46px;border-radius:50%;border:3px solid transparent;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;min-width:0;padding:0}
+.sk.on{border-color:#fff}
+.adbox{width:300px;max-width:90%;height:250px;background:#1a1a3a;border:1px dashed #667;display:flex;align-items:center;justify-content:center;color:#889}
+#res{font-size:20px;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="ad-banner">AD SLOT 1: banner (paste your ad code here)</div>
+  <div id="stage">
+    <canvas id="c"></canvas>
+    <div id="hud" class="hide"><div><span id="sc">0</span><small id="bs"></small></div><div><button id="pb" aria-label="Pause">⏸</button><button id="mb" aria-label="Mute">🔊</button></div></div>
+
+    <div id="title" class="ov">
+      <h1>ORB RUSH</h1>
+      <p>Drag or use ← → to dodge 🟥 and grab 🟡</p>
+      <button id="play">▶ Play</button>
+      <button id="daily" class="alt">📅 Daily Challenge</button>
+      <div id="skins"></div>
+      <p id="bests"></p>
+    </div>
+
+    <div id="over" class="ov hide">
+      <h2>Game Over</h2>
+      <div id="res"></div>
+      <button id="again">Play Again</button>
+      <button id="cont" class="alt">▶ Watch ad to continue</button>
+      <button id="share" class="alt">Share score</button>
+      <button id="menu" class="alt">Menu</button>
+    </div>
+
+    <div id="pause" class="ov hide"><h2>Paused</h2><button id="resume">Resume</button><button id="menu2" class="alt">Menu</button></div>
+
+    <!-- ===== AD SLOT 2: INTERSTITIAL (shown between rounds only). Placeholder box below. ===== -->
+    <div id="ad" class="ov hide"><div class="adbox" id="adbox">AD SLOT 2: interstitial</div><p id="adt"></p></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ========== AD HOOKS: replace the bodies with your real ad network code ========== */
+// Called between rounds (every 3rd Play Again). Call done() when the ad is closed/finished.
+function showInterstitialAd(done){ fakeAd('Ad', done); }
+// Called when the player taps "Watch ad to continue". Call onReward() ONLY if the ad was fully watched.
+function showRewardedAd(onReward){ fakeAd('Rewarded ad', onReward); }
+// Demo ad: 3-second countdown. DELETE this once you plug in a real network.
+function fakeAd(label, cb){
+  const adEl=$('ad'); adEl.classList.remove('hide'); let n=3;
+  const tick=()=>{ $('adt').textContent=label+' ends in '+n+'...'; if(n--<=0){ adEl.classList.add('hide'); cb(); } else setTimeout(tick,1000); };
+  tick();
+}
+
+/* ========== Helpers ========== */
+function $(id){ return document.getElementById(id); }
+const store={
+  get(k,d){ try{ const v=localStorage.getItem('orb_'+k); return v===null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem('orb_'+k,JSON.stringify(v)); }catch(e){} }
+};
+const today=()=>{ const d=new Date(); return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate(); };
+// Seeded random: same numbers for everyone on the same day (daily challenge)
+function seeded(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let q=Math.imul(a^a>>>15,1|a); q=q+Math.imul(q^q>>>7,61|q)^q; return ((q^q>>>14)>>>0)/4294967296; }; }
+
+/* ========== State ========== */
+const cv=$('c'), ctx=cv.getContext('2d');
+let W=300,H=500,dpr=1;
+let state='title', mode='normal', rnd=Math.random;
+let px=150,tx=150,py=400,items=[],parts=[],score=0,t=0,spawnT=0,shake=0,inv=0,rounds=0,usedCont=false,last=0,coins=0;
+const keys={};
+const stars=Array.from({length:60},()=>({x:Math.random(),y:Math.random(),s:Math.random()*2+.5}));
+const skins=[{c:'#55eeff',need:0},{c:'#ff66aa',need:100},{c:'#99ff44',need:250},{c:'#ffcc33',need:500}];
+let skin=store.get('skin',0), best=store.get('best',0), muted=store.get('mute',false);
+const dailyKey=()=>'daily'+today();
+
+function resize(){
+  dpr=Math.min(window.devicePixelRatio||1,2);
+  const r=cv.parentElement.getBoundingClientRect();
+  W=r.width; H=r.height; cv.width=W*dpr; cv.height=H*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  py=H-70; px=Math.min(Math.max(px,20),W-20); tx=px;
+}
+addEventListener('resize',resize);
+
+/* ========== Sound (Web Audio, no files) ========== */
+let ac;
+function snd(f,d,type,v,slide){
+  if(muted) return;
+  try{
+    ac=ac||new(window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended') ac.resume();
+    const o=ac.createOscillator(), g=ac.createGain(), n=ac.currentTime;
+    o.type=type||'sine'; o.frequency.setValueAtTime(f,n);
+    if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),n+d);
+    g.gain.setValueAtTime(v||.15,n); g.gain.exponentialRampToValueAtTime(.001,n+d);
+    o.connect(g); g.connect(ac.destination); o.start(); o.stop(n+d);
+  }catch(e){}
+}
+
+/* ========== Game flow ========== */
+function show(id){ for(const i of ['title','over','pause']) $(i).classList.toggle('hide',i!==id); }
+function start(m){
+  mode=m; rnd=m==='daily'?seeded(today()):Math.random;
+  items=[]; parts=[]; score=0; t=0; spawnT=.5; shake=0; inv=0; usedCont=false; coins=0;
+  px=tx=W/2; state='play';
+  for(const i of ['title','over','pause']) $(i).classList.add('hide');
+  $('hud').classList.remove('hide');
+  $('bs').textContent=(m==='daily'?'Daily best ':'Best ')+(m==='daily'?store.get(dailyKey(),0):best);
+  last=performance.now(); snd(440,.15,'square',.1,400);
+}
+function endRun(){
+  if(state!=='play') return;
+  state='over'; rounds++;
+  const fin=Math.floor(score); let rec='';
+  if(mode==='daily'){ if(fin>store.get(dailyKey(),0)){ store.set(dailyKey(),fin); rec=' 🏆 New daily best!'; } }
+  else if(fin>best){ best=fin; store.set('best',best); rec=' 🏆 New high score!'; }
+  shake=25; snd(200,.5,'sawtooth',.2,-150); burst(px,py,skins[skin].c,40);
+  $('res').innerHTML='Score: <b>'+fin+'</b>'+rec+'<br>Coins: '+coins+' · Best: '+(mode==='daily'?store.get(dailyKey(),0):best);
+  $('cont').classList.toggle('hide',usedCont);
+  setTimeout(()=>{ if(state==='over'){ $('hud').classList.add('hide'); show('over'); } },700);
+}
+function toMenu(){ state='title'; $('hud').classList.add('hide'); items=[]; renderTitle(); show('title'); }
+function doPause(){ if(state==='play'){ state='pause'; show('pause'); } }
+function doResume(){ if(state==='pause'){ state='play'; $('pause').classList.add('hide'); last=performance.now(); } }
+
+function renderTitle(){
+  const box=$('skins'); box.innerHTML='';
+  skins.forEach((s,i)=>{
+    const b=document.createElement('button'); const ok=best>=s.need;
+    b.className='sk'+(i===skin?' on':''); b.style.background=ok?s.c:'#333'; b.textContent=ok?'':'🔒';
+    b.title=ok?'Skin':'Reach '+s.need+' points to unlock';
+    b.onclick=()=>{ if(ok){ skin=i; store.set('skin',i); renderTitle(); snd(600,.08,'sine',.1); } };
+    box.appendChild(b);
+  });
+  $('bests').textContent='High score: '+best+' · Today\'s daily best: '+store.get(dailyKey(),0)+' · Skins unlock at 100 / 250 / 500';
+}
+
+/* ========== Spawning, particles, update ========== */
+function burst(x,y,c,n){ for(let i=0;i<n;i++){ const a=Math.random()*6.283, v=60+Math.random()*220; parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:.6+Math.random()*.4,c}); } }
+function spawn(){
+  const sc=Math.min(Math.max(H/700,.7),1.3);
+  const speed=(170+Math.min(t*6,330))*sc;
+  const isCoin=rnd()<.2, size=isCoin?22:20+rnd()*22;
+  items.push({x:size+rnd()*(W-size*2),y:-size,vy:speed*(.8+rnd()*.5),s:size,coin:isCoin,rot:rnd()*6,vr:(rnd()-.5)*4});
+}
+function update(dt){
+  t+=dt; score+=dt*5; inv=Math.max(0,inv-dt);
+  // keyboard moves the target; pointer sets it directly
+  const dir=(keys.right?1:0)-(keys.left?1:0);
+  if(dir) tx=Math.min(Math.max(tx+dir*650*dt,20),W-20);
+  px+=(tx-px)*Math.min(1,dt*18);
+  // difficulty ramp: spawn faster over time (floor 0.2s)
+  spawnT-=dt;
+  if(spawnT<=0){ spawn(); if(t>25&&rnd()<.3) spawn(); spawnT=Math.max(.2,.75-t*.008); }
+  for(let i=items.length-1;i>=0;i--){
+    const it=items[i]; it.y+=it.vy*dt; it.rot+=it.vr*dt;
+    const dx=it.x-px, dy=it.y-py, r=(it.coin?11:it.s*.45)+14;
+    if(dx*dx+dy*dy<r*r){
+      if(it.coin){ score+=10; coins++; burst(it.x,it.y,'#ffd700',12); snd(900,.12,'triangle',.12,500); items.splice(i,1); continue; }
+      else if(inv<=0){ endRun(); return; }
+    }
+    if(it.y>H+50) items.splice(i,1);
+  }
+  $('sc').textContent=Math.floor(score);
+}
+
+/* ========== Draw ========== */
+function draw(dt){
+  ctx.save(); ctx.clearRect(0,0,W,H);
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0b0b1e'); g.addColorStop(1,'#1b1040');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  shake*=Math.pow(.02,dt); if(shake>.5) ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+  ctx.fillStyle='#fff';
+  for(const s of stars){ s.y+=dt*s.s*0.03; if(s.y>1) s.y=0; ctx.globalAlpha=.25+s.s/4; ctx.fillRect(s.x*W,s.y*H,s.s,s.s); }
+  ctx.globalAlpha=1;
+  for(const it of items){
+    ctx.save(); ctx.translate(it.x,it.y);
+    if(it.coin){ ctx.shadowColor='#fc0'; ctx.shadowBlur=14; ctx.fillStyle='#ffd700'; ctx.beginPath(); ctx.arc(0,0,11,0,6.283); ctx.fill(); ctx.fillStyle='#b8860b'; ctx.beginPath(); ctx.arc(0,0,6,0,6.283); ctx.fill(); }
+    else { ctx.rotate(it.rot); ctx.shadowColor='#f33'; ctx.shadowBlur=14; ctx.fillStyle='#ff4433'; ctx.fillRect(-it.s/2,-it.s/2,it.s,it.s); ctx.fillStyle='#aa1100'; ctx.fillRect(-it.s/4,-it.s/4,it.s/2,it.s/2); }
+    ctx.restore();
+  }
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i]; p.l-=dt; if(p.l<=0){ parts.splice(i,1); continue; }
+    p.x+=p.vx*dt; p.y+=p.vy*dt; ctx.globalAlpha=Math.min(1,p.l*2); ctx.fillStyle=p.c; ctx.fillRect(p.x-2,p.y-2,4,4);
+  }
+  ctx.globalAlpha=1;
+  if(state==='play'||state==='pause'){
+    ctx.globalAlpha=inv>0&&Math.floor(inv*10)%2?.35:1;
+    ctx.shadowColor=skins[skin].c; ctx.shadowBlur=20; ctx.fillStyle=skins[skin].c;
+    ctx.beginPath(); ctx.arc(px,py,14,0,6.283); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(px-4,py-4,4,0,6.283); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ========== Main loop ========== */
+function loop(now){
+  const dt=Math.min((now-last)/1000||0,.05); last=now;
+  if(state==='play') update(dt);
+  draw(dt);
+  requestAnimationFrame(loop);
+}
+
+/* ========== Input & buttons ========== */
+function setTarget(e){ tx=Math.min(Math.max(e.clientX-cv.getBoundingClientRect().left,20),W-20); }
+cv.addEventListener('pointerdown',setTarget);
+cv.addEventListener('pointermove',setTarget);
+addEventListener('keydown',e=>{
+  const k=e.key;
+  if(k==='ArrowLeft'||k==='a'||k==='A') keys.left=true;
+  if(k==='ArrowRight'||k==='d'||k==='D') keys.right=true;
+  if(k==='p'||k==='P'||k==='Escape'){ state==='play'?doPause():doResume(); }
+  if(k==='Enter'&&state==='title') start('normal');
+});
+addEventListener('keyup',e=>{
+  const k=e.key;
+  if(k==='ArrowLeft'||k==='a'||k==='A') keys.left=false;
+  if(k==='ArrowRight'||k==='d'||k==='D') keys.right=false;
+});
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) doPause(); }); // auto-pause when tab hidden
+
+$('play').onclick=()=>start('normal');
+$('daily').onclick=()=>start('daily');
+$('again').onclick=()=>{
+  // Interstitial ad every 3rd round, always BETWEEN rounds, never during play
+  if(rounds%3===0){ $('over').classList.add('hide'); showInterstitialAd(()=>start(mode)); }
+  else start(mode);
+};
+$('cont').onclick=()=>{
+  showRewardedAd(()=>{ // continue the same run after the reward
+    usedCont=true; items=[]; inv=2.5; state='play'; $('over').classList.add('hide'); $('hud').classList.remove('hide'); last=performance.now();
+  });
+};
+$('share').onclick=async()=>{
+  const txt='I scored '+Math.floor(score)+' in Orb Rush! Can you beat me? '+location.href;
+  try{
+    if(navigator.share){ await navigator.share({title:'Orb Rush',text:txt}); }
+    else{ await navigator.clipboard.writeText(txt); $('share').textContent='Copied! ✔'; setTimeout(()=>$('share').textContent='Share score',1500); }
+  }catch(e){ prompt('Copy your score:',txt); }
+};
+$('menu').onclick=toMenu; $('menu2').onclick=toMenu;
+$('pb').onclick=()=>state==='play'?doPause():doResume();
+$('resume').onclick=doResume;
+$('mb').onclick=()=>{ muted=!muted; store.set('mute',muted); $('mb').textContent=muted?'🔇':'🔊'; };
+$('mb').textContent=muted?'🔇':'🔊';
+
+/* ========== Boot ========== */
+resize(); renderTitle(); last=performance.now(); requestAnimationFrame(loop);
+// PWA: lets players install the game. Only works when hosted on http(s).
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+</script>
+</body>
+</html>
