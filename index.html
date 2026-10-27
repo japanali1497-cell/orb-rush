@@ -1,75 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Orb Rush – Free Online Neon Dodge Game | Play Now</title>
-<meta name="description" content="Orb Rush is a free neon arcade game. Dodge the blocks, chain coin combos, grab power-ups, climb levels and beat the daily challenge. Play instantly on phone or PC, no download.">
-<meta name="keywords" content="free online game, dodge game, neon arcade, browser game, mobile game, endless game, daily challenge, one more try">
-<meta name="theme-color" content="#0b0b1e">
-<link rel="canonical" href="https://japanali1497-cell.github.io/orb-rush/">
-<meta property="og:title" content="Orb Rush – Free Neon Dodge Game">
-<meta property="og:description" content="Dodge, chain combos, beat your friends. Play instantly, free.">
-<meta property="og:type" content="website">
-<meta property="og:image" content="https://japanali1497-cell.github.io/orb-rush/icon-512.png">
-<meta name="twitter:card" content="summary">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Orb Rush","description":"Free neon dodge-and-collect arcade game.","genre":"Arcade","gamePlatform":"Web Browser","applicationCategory":"Game","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://japanali1497-cell.github.io/orb-rush/"}</script>
-<style>
-html,body{margin:0;height:100%;background:#0b0b1e;color:#fff;font-family:system-ui,Arial,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;overscroll-behavior:none}
-#wrap{position:fixed;inset:0;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
-#stage{flex:1;position:relative;min-height:0}
-#ad-banner{flex:none;height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#10102a}
-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;padding:8px 12px;pointer-events:none;font-weight:800;font-size:24px;text-shadow:0 0 12px #5ef}
-#hud small{display:block;font-size:12px;opacity:.7;font-weight:600;text-shadow:none}
-#hud button{pointer-events:auto;min-width:0;font-size:18px;padding:6px 10px;margin-left:6px;background:#2a2a55cc;color:#fff}
-.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(5,5,20,.86);text-align:center;padding:16px;box-sizing:border-box;overflow:auto}
-.hide{display:none!important}
-h1{font-size:clamp(40px,11vw,76px);margin:0;letter-spacing:4px;background:linear-gradient(90deg,#5ef,#f6a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px #5ef8)}
-h2{margin:0;font-size:34px}
-p{margin:0;opacity:.85}
-button,select{font:700 17px system-ui,Arial,sans-serif;padding:12px 24px;border:0;border-radius:14px;background:linear-gradient(#5ef,#39d);color:#012;cursor:pointer;min-width:210px;box-shadow:0 0 18px #5ef5}
-button:active{transform:scale(.96)}
-button.alt{background:#2a2a55;color:#fff;box-shadow:none}
-#modes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-#modes button{min-width:0;padding:10px 14px;font-size:14px}
-#daily::before{content:"📅 "}#time::before{content:"⏱ "}#zen::before{content:"🧘 "}
-#skins{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:320px}
-.sk{width:40px;height:40px;border-radius:50%;border:3px solid transparent;min-width:0;padding:0;box-shadow:none}
-.sk.on{border-color:#fff}
-#xpbar{width:220px;height:8px;border-radius:5px;background:#2a2a55;overflow:hidden}
-#xpfill{height:100%;width:0;background:linear-gradient(90deg,#5ef,#f6a)}
-#res{font-size:20px;line-height:1.6}
-.rec{color:#fc3;font-weight:800;font-size:24px}.close{color:#f6a;font-weight:700}
-#chal{color:#fc3;font-weight:700}
-select{min-width:0;padding:6px 10px;font-size:14px;background:#2a2a55;color:#fff;box-shadow:none}
-#consent{position:fixed;left:0;right:0;bottom:0;z-index:9;background:#1a1a3a;padding:10px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:13px}
-#consent button{min-width:0;padding:8px 16px;font-size:14px}
-#foot{font-size:11px;opacity:.5}#foot a{color:#fff}
-</style>
-</head>
-<body>
-<div id="wrap">
-  <div id="stage">
-    <canvas id="c"></canvas>
-    <div id="hud" class="hide"><div><span id="sc">0</span><small id="bs"></small></div><div><button id="pb" aria-label="Pause">⏸</button><button id="mb" aria-label="Sound">🔊</button></div></div>
-    <div id="title" class="ov">
-      <h1>ORB RUSH</h1><p data-i="tip"></p><p id="chal"></p>
-      <button id="play" data-i="play"></button>
-      <div id="modes"><button id="daily" class="alt" data-i="daily"></button><button id="time" class="alt" data-i="time"></button><button id="zen" class="alt" data-i="zen"></button></div>
-      <div id="skins"></div><p><b id="lvl"></b> · <span id="streak"></span></p>
-      <div id="xpbar"><div id="xpfill"></div></div><p id="bests"></p>
-      <div><select id="lang" aria-label="Language"></select> <button id="fs" class="alt" style="min-width:0;padding:6px 12px;font-size:14px">⛶</button></div>
-      <p id="foot"><a href="privacy.html">Privacy</a> · <a href="about.html">About</a></p>
-    </div>
-    <div id="over" class="ov hide"><h2 data-i="over"></h2><div id="res"></div><button id="again" data-i="again"></button><button id="cont" class="alt hide" data-i="revive"></button><button id="share" class="alt" data-i="share"></button><button id="menu" class="alt" data-i="menu"></button></div>
-    <div id="pause" class="ov hide"><h2 data-i="paused"></h2><button id="resume" data-i="resume"></button><button id="menu2" class="alt" data-i="menu"></button></div>
-  </div>
-  <div id="ad-banner"></div>
-</div>
-<div id="consent" class="hide"><span data-i="consent"></span><button id="c-yes" data-i="ok"></button><button id="c-no" class="alt" data-i="no"></button></div>
-<script src="i18n.js"></script><script src="ads.js"></script><script src="game.js"></script>
-</body></html>
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Orb Rush — Neon Dodge Game</title><meta name="theme-color" content="#0b0b1e">
+<link rel="manifest" href="manifest.json"><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0b1e;color:#fff;font:16px system-ui,Arial;touch-action:none}
+#stage{position:relative;width:100%;height:100%}canvas{display:block;width:100%;height:100%}
+#ui{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#08081ddd;text-align:center;padding:20px}
+h1{font-size:clamp(42px,12vw,72px);letter-spacing:4px;margin:0;background:linear-gradient(90deg,#5ef,#f6a);color:transparent;background-clip:text}
+p{margin:0;opacity:.85}button{border:0;border-radius:12px;padding:12px 28px;font:bold 18px system-ui;background:linear-gradient(#5ef,#39d);color:#012;min-width:190px}
+.hide{display:none!important}#score{position:absolute;top:12px;left:16px;font-size:24px;font-weight:800;text-shadow:0 0 10px #5ef}
+</style></head><body><div id="stage"><canvas id="c"></canvas><div id="score">0</div>
+<div id="ui"><h1>ORB RUSH</h1><p>Drag or use ← → to dodge red blocks and collect coins.</p><button id="play">▶ Play</button><p id="best"></p></div></div>
+<script>
+(()=>{'use strict';
+const c=document.getElementById('c'),x=c.getContext('2d'),ui=document.getElementById('ui'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
+let w=0,h=0,dpr=1,player=0,target=0,items=[],score=0,best=0,last=0,spawn=0,running=false,over=false,keys={};
+try{best=+(localStorage.orb_best||0)}catch(e){} bestEl.textContent='Best: '+best;
+function resize(){dpr=Math.min(devicePixelRatio||1,2);w=c.clientWidth=innerWidth;h=c.clientHeight=innerHeight;c.width=w*dpr;c.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0);player=target=w/2}
+addEventListener('resize',resize);resize();
+function start(){items=[];score=0;spawn=.4;player=target=w/2;running=true;over=false;ui.classList.add('hide');scoreEl.classList.remove('hide');last=performance.now()}
+document.getElementById('play').onclick=start;
+function pointer(e){target=Math.max(18,Math.min(w-18,e.clientX))}c.addEventListener('pointerdown',pointer);c.addEventListener('pointermove',e=>{if(e.buttons||e.pointerType==='touch')pointer(e)});
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=true;if(e.key==='ArrowRight'||e.key==='d')keys.right=true;if(e.key==='Enter'&&!running)start()});
+addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;if(e.key==='ArrowRight'||e.key==='d')keys.right=false});
+function finish(){running=false;over=true;best=Math.max(best,Math.floor(score));try{localStorage.orb_best=best}catch(e){}bestEl.textContent='Score: '+Math.floor(score)+' · Best: '+best;ui.querySelector('h1').textContent='GAME OVER';ui.querySelector('p').textContent='Try again — can you beat your best?';ui.querySelector('button').textContent='Play Again';ui.classList.remove('hide')}
+function frame(now){let dt=Math.min((now-last)/1000||0,.04);last=now;
+x.clearRect(0,0,w,h);let g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#0b0b1e');g.addColorStop(1,'#211044');x.fillStyle=g;x.fillRect(0,0,w,h);
+for(let i=0;i<50;i++){x.fillStyle='#ffffff55';x.fillRect((i*137)%w,((i*83+now*.025)%(h+2)),2,2)}
+if(running){score+=dt*5;spawn-=dt;if(spawn<=0){let coin=Math.random()<.2,s=coin?11:15+Math.random()*18;items.push({x:s+Math.random()*(w-2*s),y:-s,s,coin,v:180+Math.min(score*1.5,250)});spawn=Math.max(.22,.65-score*.001)}
+let dir=(keys.right?1:0)-(keys.left?1:0);if(dir)target=Math.max(18,Math.min(w-18,target+dir*350*dt));player+=(target-player)*Math.min(1,dt*15);
+for(let i=items.length-1;i>=0;i--){let a=items[i];a.y+=a.v*dt;let dx=a.x-player,dy=a.y-(h-65);if(dx*dx+dy*dy<(a.s+13)**2){if(a.coin){score+=10;items.splice(i,1);continue}else{finish();break}}if(a.y>h+30)items.splice(i,1)}
+scoreEl.textContent=Math.floor(score)}
+for(const a of items){x.save();x.translate(a.x,a.y);if(a.coin){x.shadowColor='#fc0';x.shadowBlur=16;x.fillStyle='#ffd700';x.beginPath();x.arc(0,0,a.s,0,Math.PI*2);x.fill()}else{x.shadowColor='#f33';x.shadowBlur=14;x.fillStyle='#ff4433';x.fillRect(-a.s/2,-a.s/2,a.s,a.s)}x.restore()}
+if(running){x.shadowColor='#5ef';x.shadowBlur=20;x.fillStyle='#55eeff';x.beginPath();x.arc(player,h-65,13,0,Math.PI*2);x.fill();x.shadowBlur=0}
+requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script></body></html>
